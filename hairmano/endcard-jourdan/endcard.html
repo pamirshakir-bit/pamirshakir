@@ -29,29 +29,31 @@
   .txt { position: relative; white-space: pre; line-height: 1; }
   .ch { position: absolute; top: 0; white-space: pre; }
   .rule { position: absolute; }
-  svg { position: absolute; left: 0; top: 0; overflow: visible; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+  svg { position: absolute; left: 0; top: 0; overflow: visible; fill: none; stroke-linecap: round; }
   .draw { stroke-dasharray: 1 1; }
 </style>
 </head>
 <body>
-<div id="card" class="abs"></div>
+<div id="black" class="abs"></div>
 <div id="root" class="abs"></div>
 <script>
 const params = new URLSearchParams(location.search);
 const V = params.get('format') !== 'h';           // ?format=h gives the 16:9 version
 const W = V ? 1080 : 1920, H = V ? 1920 : 1080;
-const DURATION = 10;            // seconds; the last ~2 s are a hold that can be trimmed in the edit
+const DURATION = 8;             // seconds; everything is in by 4.5 s, the rest is a hold that can be trimmed
 
+const ADDRESS = '7 Rue Gray, 1040 Etterbeek';
+const HOURS = 'MON – SAT  /  10:00 – 19:00';
+const PHONE = '02 424 35 52';
 const COPY = {
   logo:    'HAIRMANO',
   logoSub: 'barbershop',
-  badge:   'NOW OPEN',
-  area:    'EUROPEAN QUARTER',
-  shop:    'Jourdan',
-  address: '7 Rue Gray, 1040 Etterbeek',
-  hours:   'MON – SAT  /  10:00 – 19:00',
-  phone:   '02 424 35 52',
   news:    'NOW OPEN IN JOURDAN',
+  area:    'EUROPEAN QUARTER',
+  address: ADDRESS,
+  hours:   HOURS,
+  phone:   PHONE,
+  info:    `${ADDRESS}     ·     ${HOURS}     ·     ${PHONE}`,
   cta:     'BOOK YOUR APPOINTMENT',
   url:     'hairmano.be',
 };
@@ -60,48 +62,29 @@ const COPY = {
 const TYPE = {
   logo:    { family: '"Bungee"', weight: 400, track: 0.03 },       // size is fitted to the badge
   logoSub: { family: '"Oswald"', size: 31, weight: 400, track: 0.06, color: 'var(--khaki)' },
-  badge:   { size: 22, weight: 500, track: 0.22 },
-  area:    { size: 26, weight: 400, track: 0.3, color: 'var(--grey)' },
-  shop:    { size: V ? 178 : 168, weight: 300, track: -0.012 },
-  address: { size: V ? 36 : 33, weight: 400, track: 0 },
-  hours:   { size: V ? 30 : 28, weight: 400, track: 0.1 },
-  phone:   { size: V ? 30 : 28, weight: 400, track: 0.12 },
   news:    { size: V ? 30 : 28, weight: 400, track: 0.3, color: 'var(--khaki)' },
+  area:    { size: V ? 24 : 28, weight: 400, track: 0.3, color: 'var(--grey)' },
+  address: { size: 38, weight: 400, track: 0 },
+  hours:   { size: 29, weight: 400, track: 0.1 },
+  phone:   { size: 29, weight: 400, track: 0.12 },
+  info:    { size: 27, weight: 400, track: 0.04 },
   cta:     { size: V ? 25 : 24, weight: 500, track: 0.26, color: 'var(--grey)' },
   url:     { size: V ? 92 : 88, weight: 300, track: -0.005 },
 };
-
-// Outline icons in the style of the site (paths after Lucide, ISC licence).
-const ICONS = {
-  pin:   ['<path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"/>', '<circle cx="12" cy="10" r="3"/>'],
-  clock: ['<circle cx="12" cy="12" r="10"/>', '<path d="M12 6v6l4 2"/>'],
-  phone: ['<path d="M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"/>'],
-};
 const MOUSTACHE = 'M60 9C64 3 74 1 82 5C90 9 96 14 104 13C110 12 114 7 112 2C117 7 117 16 110 21C101 27 88 26 78 22C70 19 64 21 60 25C56 21 50 19 42 22C32 26 19 27 10 21C3 16 3 7 8 2C6 7 10 12 16 13C24 14 30 9 38 5C46 1 56 3 60 9Z';
 
-// Layout (px). Vertical keeps text inside the Reels safe zone (x 90-990, y 250-1450),
-// horizontal inside 10% title safe.
-const MARGIN = V ? 90 : 192;
-const CARD_REST = V ? 430 : 300;     // where the black's feathered edge starts while footage is still visible
-const FEATHER = V ? 340 : 300;
 const LOGO = 440;                    // badge diameter at scale 1
-const ICON = V ? 40 : 36, ICON_GAP = V ? 22 : 20;
 
 // Timeline (s)
 const T = {
-  cardIn: 0.0, cardInDur: 1.2,
+  black: 0.0, blackDur: 0.8,
   ring: 0.55, ringDur: 1.3, logo: 0.85, moustache: 1.15, logoSub: 1.35,
-  rule: 1.05, badge: 1.2, area: 1.35, shop: 1.5, rows: [1.95, 2.1, 2.25],
-  out: 5.0,
-  cardUp: 5.1, cardUpDur: 1.2,
-  move: 5.2, moveDur: 1.25,
-  news: 6.25, divider: 6.45, cta: 6.6, url: 6.75, underline: 7.35,
+  news: 1.8, area: 1.95, divider: 2.1, info: [2.25, 2.4, 2.55], cta: 2.95, url: 3.1, underline: 3.7,
 };
 
 const ease = {
   outExpo: t => t >= 1 ? 1 : 1 - Math.pow(2, -10 * t),
-  outQuart: t => 1 - Math.pow(1 - t, 4),
-  inCubic: t => t * t * t,
+  outCubic: t => 1 - Math.pow(1 - t, 3),
   inOutCubic: t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2,
 };
 const clamp01 = x => Math.min(1, Math.max(0, x));
@@ -109,7 +92,7 @@ const prog = (t, start, dur) => clamp01((t - start) / dur);
 const lerp = (a, b, k) => a + (b - a) * k;
 
 const root = document.getElementById('root');
-const card = document.getElementById('card');
+const black = document.getElementById('black');
 const ctx = document.createElement('canvas').getContext('2d');
 
 function div(cls, parent = root) {
@@ -179,22 +162,18 @@ function split(b) {
     L.el.style.left = L.x + 'px';
     line.appendChild(L.el);
   }
-  // The mask hugs the ink of the line, so letters appear and vanish right at their own edge.
+  // The mask hugs the ink of the line, so letters rise in right at their own edge.
   const margin = Math.max(3, fs * 0.06);
-  setMask(b, fs * 0.4, Math.min(b.baseline - ink.actualBoundingBoxAscent, 0) - margin,
-    Math.max(b.baseline + ink.actualBoundingBoxDescent, b.h) + margin);
-  return b;
-}
-
-// Mask box relative to the line box: from y0 to y1 (y0 may be negative), padX on both sides.
-function setMask(b, padX, y0, y1) {
-  b.padX = padX;
+  const y0 = Math.min(b.baseline - ink.actualBoundingBoxAscent, 0) - margin;
+  const y1 = Math.max(b.baseline + ink.actualBoundingBoxDescent, b.h) + margin;
+  b.padX = fs * 0.4;
   b.padT = -y0;
-  b.wrap.style.width = (b.w + 2 * padX) + 'px';
+  b.wrap.style.width = (b.w + 2 * b.padX) + 'px';
   b.wrap.style.height = (y1 - y0) + 'px';
-  b.inner.style.left = padX + 'px';
+  b.inner.style.left = b.padX + 'px';
   b.inner.style.top = b.padT + 'px';
   b.travel = y1 - y0;
+  return b;
 }
 
 // Put a block's ink left edge (or ink centre) at x, and its baseline at y.
@@ -204,29 +183,16 @@ function place(b, x, y, align = 'left') {
   b.wrap.style.top = (y - b.baseline - b.padT) + 'px';
 }
 
-function makeRule(x, y, w, h, color, opacity = 1, parent = root) {
+function makeRule(x, y, w, h, color, parent = root) {
   const r = div('rule', parent);
-  Object.assign(r.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px', background: color, opacity });
+  Object.assign(r.style, { left: x + 'px', top: y + 'px', width: w + 'px', height: h + 'px', background: color });
   return r;
-}
-
-function makeIcon(name, cx, cy, size) {
-  const pad = 8;
-  const wrap = div('mask'), inner = div('inner', wrap);
-  Object.assign(wrap.style, { left: (cx - size / 2 - pad) + 'px', top: (cy - size / 2 - pad) + 'px', width: (size + 2 * pad) + 'px', height: (size + 2 * pad) + 'px' });
-  Object.assign(inner.style, { left: pad + 'px', top: pad + 'px' });
-  const s = svg(inner, size, size, '0 0 24 24', ICONS[name].join(''));
-  s.setAttribute('stroke', '#9a9a9a');
-  s.setAttribute('stroke-width', '1.5');
-  const parts = [...s.children];
-  parts.forEach(p => { p.setAttribute('pathLength', '1'); p.classList.add('draw'); });
-  return { inner, parts, travel: size + 2 * pad };
 }
 
 // The round Hairmano badge, rebuilt as vectors so it stays sharp at any size.
 function makeBadge() {
   const D = LOGO, el = div('abs');
-  Object.assign(el.style, { width: D + 'px', height: D + 'px', transformOrigin: '0 0' });
+  Object.assign(el.style, { width: D + 'px', height: D + 'px', transformOrigin: '50% 50%' });
   const sw = 5;
   const ring = svg(el, D, D, `0 0 ${D} ${D}`,
     `<circle class="draw" cx="${D / 2}" cy="${D / 2}" r="${D / 2 - sw / 2}" stroke="var(--ring)" stroke-width="${sw}" pathLength="1" transform="rotate(-90 ${D / 2} ${D / 2})"/>`).firstChild;
@@ -245,8 +211,8 @@ function makeBadge() {
   const subY = 0.758 * D;
   place(sub, D / 2, subY + sub.xH / 2, 'center');
   const half = (sub.inkR - sub.inkL) / 2, gap = 0.032 * D, len = 0.085 * D;
-  const lineL = makeRule(D / 2 - half - gap - len, subY - 1, len, 2, 'var(--khaki)', 1, el);
-  const lineR = makeRule(D / 2 + half + gap, subY - 1, len, 2, 'var(--khaki)', 1, el);
+  const lineL = makeRule(D / 2 - half - gap - len, subY - 1, len, 2, 'var(--khaki)', el);
+  const lineR = makeRule(D / 2 + half + gap, subY - 1, len, 2, 'var(--khaki)', el);
   lineL.style.transformOrigin = '100% 50%';
   lineR.style.transformOrigin = '0 50%';
   return { el, ring, name, mWrap, sub, lineL, lineR };
@@ -264,114 +230,91 @@ async function build() {
   document.body.style.width = W + 'px';
   document.body.style.height = H + 'px';
   if (!V) document.body.classList.add('h');
-
-  const stops = [];
-  for (let i = 0; i <= 16; i++) {
-    const k = i / 16, a = k * k * (3 - 2 * k);
-    stops.push(`rgba(0,0,0,${a.toFixed(4)}) ${(k * FEATHER).toFixed(1)}px`);
-  }
-  Object.assign(card.style, {
-    width: W + 'px', height: (H + FEATHER + 400) + 'px',
-    background: `linear-gradient(to bottom, ${stops.join(', ')}) top / 100% ${FEATHER}px no-repeat`,
-  });
-  const solid = div('abs', card);
-  Object.assign(solid.style, { top: FEATHER + 'px', width: W + 'px', height: (H + 400) + 'px', background: 'var(--black)' });
+  Object.assign(black.style, { width: W + 'px', height: H + 'px', background: 'var(--black)' });
 
   const logo = makeBadge();
+  const keys = ['news', 'area', ...(V ? ['address', 'hours', 'phone'] : ['info']), 'cta', 'url'];
   const B = {};
-  for (const key of ['badge', 'area', 'shop', 'address', 'hours', 'phone', 'news', 'cta', 'url']) B[key] = makeBlock(key);
+  for (const key of keys) B[key] = makeBlock(key);
 
-  // Pill around "NOW OPEN"
-  const pillPadX = 22, pillW = (B.badge.inkR - B.badge.inkL) + 2 * pillPadX, pillH = 52;
-  const pillTop = B.badge.baseline - B.badge.capH / 2 - pillH / 2;
-  const pill = svg(B.badge.line, pillW, pillH, `0 0 ${pillW} ${pillH}`,
-    `<rect class="draw" x="0.9" y="0.9" width="${pillW - 1.8}" height="${pillH - 1.8}" rx="${(pillH - 1.8) / 2}" stroke="var(--khaki)" stroke-width="1.8" pathLength="1"/>`);
-  Object.assign(pill.style, { left: (B.badge.inkL - pillPadX) + 'px', top: pillTop + 'px' });
-  setMask(B.badge, pillPadX + 8, pillTop - 3, pillTop + pillH + 3);
-
-  const rowKeys = ['address', 'hours', 'phone'], rowIcons = ['pin', 'clock', 'phone'];
-  let from, rule, icons;
+  // Everything is one centred stack: badge, news, divider, details, call to action.
+  // Vertical stays inside the Reels safe zone (y 250-1450), horizontal inside 10% title safe.
+  const d = V ? 380 : 300, s = d / LOGO;
+  const lines = [];        // [block, gap above its cap height]
+  let dividerGap, ctaGap;
   if (V) {
-    // Part 1, vertical: badge with a rule running off it, then the location card below.
-    const d1 = 200;
-    from = { x: MARGIN, y: 760, s: d1 / LOGO };
-    rule = makeRule(MARGIN + d1 + 40, from.y + d1 / 2 - 1, W - MARGIN - (MARGIN + d1 + 40), 2, 'var(--white)', 0.22);
-    rule.dir = 'x';
-    const badgeBase = from.y + d1 + 70;
-    place(B.badge, MARGIN + pillPadX, badgeBase);
-    place(B.area, MARGIN + pillW + 28, badgeBase + (B.area.capH - B.badge.capH) / 2);
-    const shopBase = badgeBase + 48 + B.shop.capH;
-    place(B.shop, MARGIN - 2, shopBase);
-    icons = rowKeys.map((key, i) => {
-      const base = shopBase + 94 + i * 63;
-      place(B[key], MARGIN + ICON + ICON_GAP, base);
-      return makeIcon(rowIcons[i], MARGIN + ICON / 2, base - B[key].capH / 2, ICON);
-    });
+    lines.push([B.news, 70], [B.area, 22]);
+    dividerGap = 44;
+    lines.push([B.address, 50], [B.hours, 60 - B.hours.capH], [B.phone, 52 - B.phone.capH]);
+    ctaGap = 92;
   } else {
-    // Part 1, horizontal: laid out like the site footer - badge, title block, divider, details column.
-    const d1 = 230;
-    from = { x: MARGIN, y: 670, s: d1 / LOGO };
-    const x0 = MARGIN + d1 + 70;
-    const badgeBase = from.y + 48;
-    place(B.badge, x0 + pillPadX, badgeBase);
-    place(B.area, x0 + pillW + 28, badgeBase + (B.area.capH - B.badge.capH) / 2);
-    const shopBase = badgeBase + 46 + B.shop.capH;
-    place(B.shop, x0 - 2, shopBase);
-    const ruleX = 1150;
-    rule = makeRule(ruleX, from.y + 10, 2, d1 - 20, 'var(--white)', 0.22);
-    rule.dir = 'y';
-    const colX = ruleX + 62;
-    icons = rowKeys.map((key, i) => {
-      const base = from.y + d1 / 2 + 8 + (i - 1) * 64;
-      place(B[key], colX + ICON + ICON_GAP, base);
-      return makeIcon(rowIcons[i], colX + ICON / 2, base - B[key].capH / 2, ICON);
-    });
+    lines.push([B.news, 54]);
+    dividerGap = 36;
+    lines.push([B.info, 40]);
+    ctaGap = 56;
   }
+  const urlGap = V ? 42 : 36, underlineGap = 22;
+  let h = d + dividerGap + B.cta.capH + ctaGap + B.url.capH + urlGap + underlineGap;
+  for (const [b, gap] of lines) h += gap + b.capH;
+  let y = Math.max(V ? 250 : 108, (V ? 850 : H / 2) - h / 2);
 
-  // Part 2: the badge moves to the centre and the call to action builds under it.
-  const d2 = V ? 440 : 380, s2 = d2 / LOGO;
-  const gapNews = V ? 74 : 62, gapDiv = V ? 46 : 40, gapCta = V ? 46 : 40, gapUrl = V ? 44 : 38;
-  const blockH = d2 + gapNews + B.news.capH + gapDiv + gapCta + B.cta.capH + gapUrl + B.url.capH + 22;
-  const top = (V ? 850 : H / 2) - blockH / 2;
-  const to = { x: W / 2 - d2 / 2, y: top, s: s2 };
-  const newsBase = top + d2 + gapNews + B.news.capH;
-  const dividerY = newsBase + gapDiv;
-  const ctaBase = dividerY + gapCta + B.cta.capH;
-  const urlBase = ctaBase + gapUrl + B.url.capH;
-  place(B.news, W / 2, newsBase, 'center');
+  const badgeTop = y;
+  y += d;
+  const out = { divider: 0 };
+  for (const [b, gap] of lines) {
+    if (b === (V ? B.address : B.info)) { out.divider = y + dividerGap; y += dividerGap; }
+    y += gap + b.capH;
+    b.baseline_y = y;
+  }
+  y += ctaGap + B.cta.capH;
+  const ctaBase = y;
+  y += urlGap + B.url.capH;
+  const urlBase = y;
+
+  let dot = null;
+  if (V) {
+    for (const [b] of lines) place(b, W / 2, b.baseline_y, 'center');
+  } else {
+    // News and area share one line: khaki then grey, centred as a pair with a dot between.
+    const gapX = 76, wN = B.news.inkR - B.news.inkL, wA = B.area.inkR - B.area.inkL;
+    const left = W / 2 - (wN + gapX + wA) / 2, base = B.news.baseline_y;
+    place(B.news, left, base);
+    place(B.area, left + wN + gapX, base);
+    dot = makeRule(left + wN + gapX / 2 - 3, base - B.news.capH / 2 - 3, 6, 6, 'var(--grey)');
+    dot.style.borderRadius = '50%';
+    place(B.info, W / 2, B.info.baseline_y, 'center');
+  }
   place(B.cta, W / 2, ctaBase, 'center');
   place(B.url, W / 2, urlBase, 'center');
-  const divider = makeRule(W / 2 - 36, dividerY - 1, 72, 2, 'var(--khaki)');
+  const divider = makeRule(W / 2 - 36, out.divider - 1, 72, 2, 'var(--khaki)');
   const urlInkW = B.url.inkR - B.url.inkL;
-  const underline = makeRule(W / 2 - urlInkW / 2, urlBase + 20, urlInkW, 2, 'var(--white)');
+  const underline = makeRule(W / 2 - urlInkW / 2, urlBase + underlineGap, urlInkW, 2, 'var(--white)');
   underline.style.transformOrigin = '0 50%';
 
-  S = { logo, B, pill: pill.firstChild, rule, icons, divider, underline, from, to };
+  logo.pos = { x: W / 2 - LOGO / 2, y: badgeTop + d / 2 - LOGO / 2, s };
+  const info = V ? [B.address, B.hours, B.phone] : [B.info];
+  S = { logo, B, info, dot, divider, underline };
 }
 
-// Letters rise out of their mask on the way in and leave through the top on the way out.
-function letters(b, t, start, dur, stagger, outStart = null, outDur = 0.55) {
+// Letters rise out of their mask one after another.
+function letters(b, t, start, dur, stagger) {
   b.letters.forEach((L, i) => {
     const p = ease.outExpo(prog(t, start + i * stagger, dur));
     L.el.style.transform = `translateY(${((1 - p) * b.travel).toFixed(2)}px)`;
     L.el.style.opacity = prog(t, start + i * stagger, dur * 0.3).toFixed(3);
   });
-  if (outStart !== null) {
-    const q = ease.inCubic(prog(t, outStart, outDur));
-    b.inner.style.transform = `translateY(${(-q * b.travel).toFixed(2)}px)`;
-  }
 }
 
 function renderAt(t) {
-  const { logo, B, pill, rule, icons, divider, underline, from, to } = S;
+  const { logo, B, info, dot, divider, underline } = S;
 
-  // Black rises over the footage, then lifts off the top to fill the frame.
-  const pin = ease.outQuart(prog(t, T.cardIn, T.cardInDur));
-  const pup = ease.inOutCubic(prog(t, T.cardUp, T.cardUpDur));
-  const cardTop = lerp(lerp(H + 10, CARD_REST, pin), -FEATHER - 60, pup);
-  card.style.transform = `translateY(${cardTop.toFixed(2)}px)`;
+  // The picture goes to black.
+  black.style.opacity = ease.inOutCubic(prog(t, T.black, T.blackDur)).toFixed(4);
 
-  // Badge draws on, then travels to the centre and grows.
+  // Badge draws on while settling to its size.
+  const { x, y, s } = logo.pos;
+  const grow = lerp(0.92, 1, ease.outCubic(prog(t, T.ring, 1.8)));
+  logo.el.style.transform = `translate(${x.toFixed(2)}px, ${y.toFixed(2)}px) scale(${(s * grow).toFixed(4)})`;
   logo.ring.style.strokeDashoffset = (1 - ease.inOutCubic(prog(t, T.ring, T.ringDur))).toFixed(4);
   letters(logo.name, t, T.logo, 0.9, 0.04);
   const m = ease.outExpo(prog(t, T.moustache, 1.0));
@@ -380,32 +323,13 @@ function renderAt(t) {
   const l = ease.outExpo(prog(t, T.logoSub + 0.15, 0.9)).toFixed(4);
   logo.lineL.style.transform = `scaleX(${l})`;
   logo.lineR.style.transform = `scaleX(${l})`;
-  const mv = ease.inOutCubic(prog(t, T.move, T.moveDur));
-  logo.el.style.transform = `translate(${lerp(from.x, to.x, mv).toFixed(2)}px, ${lerp(from.y, to.y, mv).toFixed(2)}px) scale(${lerp(from.s, to.s, mv).toFixed(4)})`;
 
-  // Part 1
-  const rIn = ease.outExpo(prog(t, T.rule, 1.2)), rOut = ease.inCubic(prog(t, T.out, 0.5));
-  const axis = rule.dir === 'x' ? 'scaleX' : 'scaleY';
-  rule.style.transformOrigin = rOut > 0 ? (rule.dir === 'x' ? '100% 50%' : '50% 100%') : '0 0';
-  rule.style.transform = `${axis}(${(rOut > 0 ? 1 - rOut : rIn).toFixed(4)})`;
-
-  letters(B.badge, t, T.badge + 0.25, 0.8, 0.02, T.out);
-  pill.style.strokeDashoffset = (1 - ease.inOutCubic(prog(t, T.badge, 0.8))).toFixed(4);
-  letters(B.area, t, T.area, 0.9, 0.018, T.out + 0.03);
-  letters(B.shop, t, T.shop, 1.0, 0.05, T.out + 0.07);
-  ['address', 'hours', 'phone'].forEach((key, i) => {
-    const start = T.rows[i], outStart = T.out + 0.12 + i * 0.05;
-    letters(B[key], t, start + 0.1, 0.85, 0.01, outStart);
-    const ic = icons[i];
-    const d = ease.inOutCubic(prog(t, start, 0.9));
-    ic.parts.forEach(p => { p.style.strokeDashoffset = (1 - d).toFixed(4); });
-    ic.inner.style.opacity = prog(t, start, 0.15).toFixed(3);
-    ic.inner.style.transform = `translateY(${(-ease.inCubic(prog(t, outStart, 0.55)) * ic.travel).toFixed(2)}px)`;
-  });
-
-  // Part 2
+  // Text stack
   letters(B.news, t, T.news, 0.9, 0.018);
+  letters(B.area, t, T.area, 0.9, 0.018);
+  if (dot) dot.style.opacity = prog(t, T.area, 0.5).toFixed(3);
   divider.style.transform = `scaleX(${ease.outExpo(prog(t, T.divider, 1.0)).toFixed(4)})`;
+  info.forEach((b, i) => letters(b, t, T.info[i], 0.9, V ? 0.012 : 0.006));
   letters(B.cta, t, T.cta, 0.9, 0.016);
   letters(B.url, t, T.url, 1.0, 0.035);
   underline.style.transform = `scaleX(${ease.inOutCubic(prog(t, T.underline, 0.9)).toFixed(4)})`;
@@ -413,7 +337,6 @@ function renderAt(t) {
 
 if (params.has('preview')) document.body.classList.add('preview');
 window.DURATION = DURATION;
-window.SIZE = { W, H };
 window.renderAt = renderAt;
 window.ready = build().then(() => renderAt(+(params.get('t') || 0)));
 </script>

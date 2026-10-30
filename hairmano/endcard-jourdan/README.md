@@ -1,6 +1,6 @@
 # Hairmano – loppuanimaatio (Jourdan)
 
-Tumma brändilopetus hairmano.be:n footerin tyyliin: viimeinen kuva liukuu mustaan, pyöreä HAIRMANO-logo piirtyy esiin, Jourdanin liikkeen tiedot tulevat sisään ja lopuksi CTA (hairmano.be).
+Tumma brändilopetus hairmano.be:n footerin tyyliin. Kuva häivytetään mustaksi, pyöreä HAIRMANO-logo piirtyy esiin ja sen alle tulevat uuden liikkeen tiedot sekä CTA (hairmano.be).
 
 ## Tiedostot (`renders/`)
 
@@ -8,27 +8,25 @@ Tumma brändilopetus hairmano.be:n footerin tyyliin: viimeinen kuva liukuu musta
 |---|---|
 | `hairmano-jourdan-endcard_1080x1920_25fps_alpha.mov` | Pysty 9:16, ProRes 4444 + alfa. Aikajanalle. |
 | `hairmano-jourdan-endcard_1920x1080_25fps_alpha.mov` | Vaaka 16:9, ProRes 4444 + alfa. Aikajanalle. |
-| `…_preview.mp4` | Esikatselu puhelimelle. Taustalla sivuston kuva Jourdanista videosi viimeisen kuvan tilalla. Ei aikajanalle. |
+| `…_preview.mp4` | Esikatselu puhelimelle. Alun taustalla on sivuston kuva Jourdanista videosi viimeisen kuvan tilalla. Ei aikajanalle. |
 
-Kesto 10 s, 25 fps.
+Kesto 8 s, 25 fps.
 
 ## DaVinci Resolve
 
-1. Raahaa MOV Media Pooliin ja aikajanalle **V2:lle** viimeisen klipin päälle.
-2. Anna viimeisen kuvan jatkua MOV:n alla noin 6 s. Musta peittää kuvan kokonaan kohdassa 6,3 s. Jos kuvaa ei ole tarpeeksi: oikea klikkaus klipistä → *Change Clip Speed* → *Freeze Frame*.
-3. Ilman mitään alla MOV toimii myös erillisenä lopetuksena, koska tausta on joka tapauksessa musta.
-4. Jos läpinäkyvyys ei näy: oikea klikkaus klipistä → *Clip Attributes* → *Alpha Mode: Straight*.
-5. Loppu (n. 8,3–10 s) on pelkkää pitoa. Sitä voi lyhentää vapaasti.
+1. Raahaa MOV Media Pooliin ja aikajanalle **V2:lle** niin, että se alkaa noin sekunnin ennen viimeisen klipin loppua. Ensimmäiset 0,8 s häivyttävät kuvan mustaksi.
+2. Jos MOV:n alla ei ole mitään, ruutu on musta alusta asti, joten sen voi laittaa myös suoraan videon perään.
+3. Jos läpinäkyvyys ei näy: oikea klikkaus klipistä → *Clip Attributes* → *Alpha Mode: Straight*.
+4. Kaikki on ruudulla kohdassa 4,6 s, ja loppu on pelkkää pitoa. Sitä voi lyhentää vapaasti.
 
 ## Ajoitus
 
 | s | Tapahtuu |
 |---|---|
-| 0–1,2 | Musta nousee alhaalta, kuva näkyy yläosassa |
+| 0–0,8 | Kuva häivyttyy mustaksi |
 | 0,55–1,9 | Logo piirtyy |
-| 1,2–3,1 | NOW OPEN · EUROPEAN QUARTER, Jourdan, osoite, aukiolo, puhelin |
-| 5,0–6,4 | Tiedot poistuvat, musta täyttää ruudun, logo siirtyy keskelle |
-| 6,3–8,3 | NOW OPEN IN JOURDAN · BOOK YOUR APPOINTMENT · hairmano.be |
+| 1,8–3,4 | NOW OPEN IN JOURDAN, EUROPEAN QUARTER, osoite, aukiolo, puhelin |
+| 2,95–4,6 | BOOK YOUR APPOINTMENT ja alleviivattu hairmano.be |
 
 ## Huomioitavaa
 
